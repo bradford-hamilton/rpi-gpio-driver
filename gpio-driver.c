@@ -4,13 +4,13 @@
 
 static int __init gpio_driver_init(void)
 {
-  pr_info("gpio driver initialized");
+  pr_info("gpio driver initialized\n");
   return 0;
 }
 
 static void __exit gpio_driver_exit(void)
 {
-  pr_info("gpio driver exited");
+  pr_info("gpio driver exited\n");
 }
 
 module_init(gpio_driver_init);
