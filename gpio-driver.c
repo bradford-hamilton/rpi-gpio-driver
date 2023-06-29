@@ -28,8 +28,8 @@ static struct proc_dir_entry* gpio_proc = NULL;
 static volatile unsigned int* gpio_addr = NULL;
 static char gpio_proc_buf[PROCFS_MAX_SIZE];
 
+// Sets given gpio pin to input/output through the appropriate function select register
 static void set_as_input(unsigned int pin) { FSEL_REG(pin) &= ~(7 << ((pin % 10) * 3)); }
-
 static void set_as_output(unsigned int pin) { FSEL_REG(pin) |= (1 << ((pin % 10) * 3)); }
 
 static void write_pin(unsigned int pin, unsigned int val)
@@ -69,15 +69,32 @@ static ssize_t gpio_proc_write(struct file* filep, const char __user* user_buf, 
 
   copy_from_user(gpio_proc_buf, user_buf, buf_len);
 
-  pr_info("You wrote '%s' to gpio driver\n", gpio_proc_buf);
+  int pin;
+  int io;
 
-  gpio_pin_on(17);
-  ssleep(3);
-  gpio_pin_off(17);
-  ssleep(3);
-  gpio_pin_on(17);
-  ssleep(3);
-  gpio_pin_off(17);
+  int num_parsed = sscanf(gpio_proc_buf, "%d,%d", &pin, &io);
+  if (num_parsed != 2) {
+    pr_alert("error: invalid data format submitted\n");
+    return buf_len;
+  }
+  if (pin < 2 || pin > 27) {
+    pr_alert("error: invalid GPIO pin number\n");
+    return buf_len;
+  }
+  if (io != 0 && io != 1) {
+    pr_alert("error: pin io must be 0 or 1 only\n");
+    return buf_len;
+  }
+
+  pr_info("You wrote '%d,%d' to gpio driver\n", pin, io);
+
+  if (io == 0) {
+    gpio_pin_off(pin);
+  } else if (io == 1) {
+    gpio_pin_on(pin);
+  } else {
+    pr_alert("You found an edge case, pin: %d and io: %d\n", pin, io);
+  }
 
   return buf_len;
 }
