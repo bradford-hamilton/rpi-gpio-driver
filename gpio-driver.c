@@ -59,6 +59,8 @@ static ssize_t gpio_proc_read(struct file* filep, char __user* user_buf, size_t 
   return 31;
 }
 
+// 17, 27, 22, 23, 24, 25, 5, 6
+
 static ssize_t gpio_proc_write(struct file* filep, const char __user* user_buf, size_t buf_len, loff_t* offset)
 {
   memset(gpio_proc_buf, 0x0, sizeof(gpio_proc_buf));
@@ -69,32 +71,72 @@ static ssize_t gpio_proc_write(struct file* filep, const char __user* user_buf, 
 
   copy_from_user(gpio_proc_buf, user_buf, buf_len);
 
-  int pin;
-  int io;
+  // int pin;
+  // int io;
 
-  int num_parsed = sscanf(gpio_proc_buf, "%d,%d", &pin, &io);
-  if (num_parsed != 2) {
-    pr_alert("error: invalid data format submitted\n");
-    return buf_len;
-  }
-  if (pin < 2 || pin > 27) {
-    pr_alert("error: invalid GPIO pin number\n");
-    return buf_len;
-  }
-  if (io != 0 && io != 1) {
-    pr_alert("error: pin io must be 0 or 1 only\n");
-    return buf_len;
-  }
+  // int num_parsed = sscanf(gpio_proc_buf, "%d,%d", &pin, &io);
+  // if (num_parsed != 2) {
+  //   pr_alert("error: invalid data format submitted\n");
+  //   return buf_len;
+  // }
+  // if (pin < 2 || pin > 27) {
+  //   pr_alert("error: invalid GPIO pin number\n");
+  //   return buf_len;
+  // }
+  // if (io != 0 && io != 1) {
+  //   pr_alert("error: pin io must be 0 or 1 only\n");
+  //   return buf_len;
+  // }
 
-  pr_info("You wrote '%d,%d' to gpio driver\n", pin, io);
+  // pr_info("You wrote '%d,%d' to gpio driver\n", pin, io);
 
-  if (io == 0) {
-    gpio_pin_off(pin);
-  } else if (io == 1) {
-    gpio_pin_on(pin);
-  } else {
-    pr_alert("You found an edge case, pin: %d and io: %d\n", pin, io);
-  }
+  // if (io == 0) {
+  //   gpio_pin_off(pin);
+  // } else if (io == 1) {
+  //   gpio_pin_on(pin);
+  // } else {
+  //   pr_alert("You found an edge case, pin: %d and io: %d\n", pin, io);
+  // }
+
+  gpio_pin_on(17);
+  msleep(500);
+  gpio_pin_off(17);
+  msleep(500);
+
+  gpio_pin_on(27);
+  msleep(500);
+  gpio_pin_off(27);
+  msleep(500);
+
+  gpio_pin_on(22);
+  msleep(500);
+  gpio_pin_off(22);
+  msleep(500);
+  
+  gpio_pin_on(23);
+  msleep(500);
+  gpio_pin_off(23);
+  msleep(500);
+
+  gpio_pin_on(24);
+  msleep(500);
+  gpio_pin_off(24);
+  msleep(500);
+
+  gpio_pin_on(25);
+  msleep(500);
+  gpio_pin_off(25);
+  msleep(500);
+
+  gpio_pin_on(5);
+  msleep(500);
+  gpio_pin_off(5);
+  msleep(500);
+
+  gpio_pin_on(6);
+  msleep(500);
+  gpio_pin_off(6);
+  msleep(500);
 
   return buf_len;
 }
