@@ -5,16 +5,53 @@
 #include <linux/proc_fs.h>
 #include <linux/uaccess.h>
 #include <linux/version.h>
+#include <linux/delay.h>
+#include <asm/io.h>
 
+// Define different proc ops structures depending on kernel version
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 6, 0)
 #define HAVE_PROC_OPS
 #endif
 
+// Procfs macros
 #define PROCFS_MAX_SIZE 1024
 #define PROCFS_NAME "gpiobuf"
 
+// Register macros
+#define GPIO_REGISTER_BASE 0xfe200000
+#define GPIO_SET_REG *(gpio_addr+7)
+#define GPIO_CLR_REG *(gpio_addr+10)
+#define FSEL_REG(pin) *(gpio_addr + (pin/10))
+
+// Global variables
 static struct proc_dir_entry* gpio_proc = NULL;
+static volatile unsigned int* gpio_addr = NULL;
 static char gpio_proc_buf[PROCFS_MAX_SIZE];
+
+static void set_as_input(unsigned int pin) { FSEL_REG(pin) &= ~(7 << ((pin % 10) * 3)); }
+
+static void set_as_output(unsigned int pin) { FSEL_REG(pin) |= (1 << ((pin % 10) * 3)); }
+
+static void write_pin(unsigned int pin, unsigned int val)
+{
+  if (val) {
+    GPIO_SET_REG = 1 << pin;
+  } else {
+    GPIO_CLR_REG = 1 << pin;
+  }
+}
+
+static void gpio_pin_on(unsigned int pin)
+{
+  set_as_output(pin);
+  write_pin(pin, 1);
+}
+
+static void gpio_pin_off(unsigned int pin)
+{
+  set_as_output(pin);
+  write_pin(pin, 0);
+}
 
 static ssize_t gpio_proc_read(struct file* filep, char __user* user_buf, size_t buf_len, loff_t* offset)
 {
@@ -34,6 +71,14 @@ static ssize_t gpio_proc_write(struct file* filep, const char __user* user_buf, 
 
   pr_info("You wrote '%s' to gpio driver\n", gpio_proc_buf);
 
+  gpio_pin_on(17);
+  ssleep(3);
+  gpio_pin_off(17);
+  ssleep(3);
+  gpio_pin_on(17);
+  ssleep(3);
+  gpio_pin_off(17);
+
   return buf_len;
 }
 
@@ -51,6 +96,13 @@ static const struct file_operations proc_file_fops = {
 
 static int __init gpio_driver_init(void)
 {
+  gpio_addr = (volatile unsigned int*)ioremap(GPIO_REGISTER_BASE, 4096);
+  if (gpio_addr == NULL) {
+    pr_alert("error: failed to remap gpio register base\n");
+    return -1;
+  }
+  pr_info("successfully mapped GPIO memory\n");
+
   gpio_proc = proc_create(PROCFS_NAME, 0666, NULL, &proc_file_fops);
   if (gpio_proc == NULL) {
     proc_remove(gpio_proc);
@@ -65,6 +117,7 @@ static int __init gpio_driver_init(void)
 
 static void __exit gpio_driver_exit(void)
 {
+  iounmap(gpio_addr);
   proc_remove(gpio_proc);
   pr_info("/proc/%s removed\n", PROCFS_NAME);
 }
