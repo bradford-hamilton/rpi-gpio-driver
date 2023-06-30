@@ -27,6 +27,7 @@
 static struct proc_dir_entry* gpio_proc = NULL;
 static volatile unsigned int* gpio_addr = NULL;
 static char gpio_proc_buf[PROCFS_MAX_SIZE];
+static int pins[8] = {6, 5, 25, 24, 23, 22, 27, 17};
 
 // Sets given gpio pin to input/output through the appropriate function select register
 static void set_as_input(unsigned int pin) { FSEL_REG(pin) &= ~(7 << ((pin % 10) * 3)); }
@@ -53,13 +54,28 @@ static void gpio_pin_off(unsigned int pin)
   write_pin(pin, 0);
 }
 
+// 17, 27, 22, 23, 24, 25, 5, 6
+void set_leds(unsigned int num) {
+  int i;
+  for (i = 7; i >= 0; i--) {
+    unsigned int bit = (num >> i) & 1;
+    if (bit == 1) {
+      gpio_pin_on(pins[i]);
+    }
+  }
+
+  ssleep(5);
+
+  for (i = 7; i >= 0; i--) {
+    gpio_pin_off(pins[i]);
+  }
+}
+
 static ssize_t gpio_proc_read(struct file* filep, char __user* user_buf, size_t buf_len, loff_t* offset)
 {
   copy_to_user(user_buf, "Successfully read from gpio driver\n", 31);
   return 31;
 }
-
-// 17, 27, 22, 23, 24, 25, 5, 6
 
 static ssize_t gpio_proc_write(struct file* filep, const char __user* user_buf, size_t buf_len, loff_t* offset)
 {
@@ -71,72 +87,22 @@ static ssize_t gpio_proc_write(struct file* filep, const char __user* user_buf, 
 
   copy_from_user(gpio_proc_buf, user_buf, buf_len);
 
-  // int pin;
-  // int io;
+  unsigned int num;
+  int num_parsed = sscanf(gpio_proc_buf, "%d", &num);
 
-  // int num_parsed = sscanf(gpio_proc_buf, "%d,%d", &pin, &io);
-  // if (num_parsed != 2) {
-  //   pr_alert("error: invalid data format submitted\n");
-  //   return buf_len;
-  // }
-  // if (pin < 2 || pin > 27) {
-  //   pr_alert("error: invalid GPIO pin number\n");
-  //   return buf_len;
-  // }
-  // if (io != 0 && io != 1) {
-  //   pr_alert("error: pin io must be 0 or 1 only\n");
-  //   return buf_len;
-  // }
+  if (num_parsed != 1) {
+    pr_alert("error: invalid data format submitted\n");
+    return buf_len;
+  }
 
-  // pr_info("You wrote '%d,%d' to gpio driver\n", pin, io);
+  if (num < 0 || num > 255) {
+    pr_alert("error: invalid 8-bit number\n");
+    return buf_len;
+  }
 
-  // if (io == 0) {
-  //   gpio_pin_off(pin);
-  // } else if (io == 1) {
-  //   gpio_pin_on(pin);
-  // } else {
-  //   pr_alert("You found an edge case, pin: %d and io: %d\n", pin, io);
-  // }
+  set_leds(num);
 
-  gpio_pin_on(17);
-  msleep(500);
-  gpio_pin_off(17);
-  msleep(500);
-
-  gpio_pin_on(27);
-  msleep(500);
-  gpio_pin_off(27);
-  msleep(500);
-
-  gpio_pin_on(22);
-  msleep(500);
-  gpio_pin_off(22);
-  msleep(500);
-  
-  gpio_pin_on(23);
-  msleep(500);
-  gpio_pin_off(23);
-  msleep(500);
-
-  gpio_pin_on(24);
-  msleep(500);
-  gpio_pin_off(24);
-  msleep(500);
-
-  gpio_pin_on(25);
-  msleep(500);
-  gpio_pin_off(25);
-  msleep(500);
-
-  gpio_pin_on(5);
-  msleep(500);
-  gpio_pin_off(5);
-  msleep(500);
-
-  gpio_pin_on(6);
-  msleep(500);
-  gpio_pin_off(6);
-  msleep(500);
+  pr_info("You wrote '%d' to gpio driver\n", num);
 
   return buf_len;
 }
