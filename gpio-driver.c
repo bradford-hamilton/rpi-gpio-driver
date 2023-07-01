@@ -8,7 +8,7 @@
 #include <linux/delay.h>
 #include <asm/io.h>
 
-// Define different proc ops structures depending on kernel version
+// For defining different proc ops structures depending on kernel version
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 6, 0)
 #define HAVE_PROC_OPS
 #endif
@@ -152,5 +152,5 @@ module_exit(gpio_driver_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("bradford-hamilton");
-MODULE_DESCRIPTION("basic gpio driver for raspberry pi");
+MODULE_DESCRIPTION("kernel module for rpi4 GPIO interaction");
 MODULE_VERSION("1.0");
