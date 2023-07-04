@@ -19,9 +19,9 @@
 
 // Register macros
 #define GPIO_REGISTER_BASE 0xfe200000
-#define GPIO_SET_REG *(gpio_addr+7)
-#define GPIO_CLR_REG *(gpio_addr+10)
-#define FSEL_REG(pin) *(gpio_addr + (pin/10))
+#define GPIO_SET_REG *(gpio_addr + 7)
+#define GPIO_CLR_REG *(gpio_addr + 10)
+#define FSEL_REG(pin) *(gpio_addr + (pin / 10))
 
 // Global variables
 static struct proc_dir_entry* gpio_proc = NULL;
@@ -54,7 +54,6 @@ static void gpio_pin_off(unsigned int pin)
   write_pin(pin, 0);
 }
 
-// 17, 27, 22, 23, 24, 25, 5, 6
 void set_leds(unsigned int num) {
   int i;
   for (i = 7; i >= 0; i--) {
