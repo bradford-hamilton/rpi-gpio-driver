@@ -18,7 +18,7 @@
 #define PROCFS_NAME "gpiobuf"
 
 // Register macros
-#define GPIO_REGISTER_BASE 0xfe200000
+#define GPIO_ADDRESS_BASE 0xfe200000
 #define GPIO_SET_REG *(gpio_addr + 7)
 #define GPIO_CLR_REG *(gpio_addr + 10)
 #define FSEL_REG(pin) *(gpio_addr + (pin / 10))
@@ -120,7 +120,7 @@ static const struct file_operations proc_file_fops = {
 
 static int __init gpio_driver_init(void)
 {
-  gpio_addr = (volatile unsigned int*)ioremap(GPIO_REGISTER_BASE, 4096);
+  gpio_addr = (volatile unsigned int*)ioremap(GPIO_ADDRESS_BASE, 4096);
   if (gpio_addr == NULL) {
     pr_alert("error: failed to remap gpio register base\n");
     return -1;
