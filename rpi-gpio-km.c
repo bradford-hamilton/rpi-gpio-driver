@@ -70,13 +70,13 @@ void set_leds(unsigned int num) {
   }
 }
 
-static ssize_t gpio_proc_read(struct file* filep, char __user* user_buf, size_t buf_len, loff_t* offset)
+static ssize_t gpio_proc_read(struct file* filp, char __user* user_buf, size_t buf_len, loff_t* offset)
 {
   copy_to_user(user_buf, "Successfully read from gpio driver\n", 31);
   return 0;
 }
 
-static ssize_t gpio_proc_write(struct file* filep, const char __user* user_buf, size_t buf_len, loff_t* offset)
+static ssize_t gpio_proc_write(struct file* filp, const char __user* user_buf, size_t buf_len, loff_t* offset)
 {
   memset(gpio_proc_buf, 0x0, sizeof(gpio_proc_buf));
 
